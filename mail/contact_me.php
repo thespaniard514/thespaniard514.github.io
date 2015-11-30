@@ -1,4 +1,7 @@
 <?php
+ini_set("SMTP", "mail.nmcollins.com");
+ini_set("sendmail_from", "noreply@nmcollins.com");
+
 // Check for empty fields
 if(empty($_POST['name'])  		||
    empty($_POST['email']) 		||
