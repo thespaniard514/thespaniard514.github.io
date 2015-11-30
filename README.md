@@ -1,3 +1,1 @@
-nmcollins.com
-
-My personal site
+Personal resumé site
