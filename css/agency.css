@@ -175,14 +175,23 @@ fieldset[disabled] .btn-xl.active {
   font-weight: 400;
   letter-spacing: 1px;
   color: white;
+  background-color: rgba(34, 34, 34, 0.5);
+}
+.navbar-default .nav li:last-child a {
+  border-top-right-radius: 3px;
+  border-bottom-right-radius: 3px;
+}
+.navbar-default .nav li:nth-child(2) a {
+  border-top-left-radius: 3px;
+  border-bottom-left-radius: 3px;
 }
 .navbar-default .nav li a:hover,
 .navbar-default .nav li a:focus {
   color: #fed136;
   outline: none;
+  background-color: rgba(34, 34, 34, 0.7);
 }
 .navbar-default .navbar-nav > .active > a {
-  border-radius: 0;
   color: white;
   background-color: #fed136;
 }
@@ -218,7 +227,7 @@ fieldset[disabled] .btn-xl.active {
   }
 }
 header {
-  background-image: url('../img/header-bg.jpg');
+  background-image: url('../img/bg_tride.jpg');
   background-repeat: none;
   background-attachment: scroll;
   background-position: center center;
