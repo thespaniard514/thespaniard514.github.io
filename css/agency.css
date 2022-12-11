@@ -738,3 +738,10 @@ img::-moz-selection {
 body {
   webkit-tap-highlight-color: #fed136;
 }
+.my-image-row {
+  padding-bottom: 30px;
+}
+.my-image img {
+  width: 200px;
+  border-radius: 50%;
+}
