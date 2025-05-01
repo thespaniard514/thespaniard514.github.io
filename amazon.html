@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Amazon Affiliate Link Generator</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+    }
+    input, button {
+      font-size: 1rem;
+      padding: 0.5rem;
+      margin: 0.5rem 0;
+      width: 100%;
+      max-width: 400px;
+    }
+    #output a {
+      word-break: break-all;
+      color: blue;
+    }
+  </style>
+</head>
+<body>
+  <h1>Affiliate Link Generator</h1>
+  <input
+    id="urlInput"
+    type="text"
+    placeholder="Paste Amazon product URL"
+  />
+  <button id="goBtn">Generate Affiliate Link</button>
+  <p id="output"></p>
+
+  <script>
+    const tag = "makeithapp0ef-20"; // ← replace with your Associate tag
+
+    function extractASIN(url) {
+      try {
+        const path = new URL(url).pathname;
+        const m = path.match(/\/([A-Z0-9]{10})(?:[/?]|$)/);
+        return m ? m[1] : null;
+      } catch {
+        return null;
+      }
+    }
+
+    document.getElementById("goBtn").onclick = () => {
+      const input = document.getElementById("urlInput").value.trim();
+      const asin = extractASIN(input);
+      const out = document.getElementById("output");
+      if (!asin) {
+        out.textContent = "❌ Could not find a valid ASIN in that URL.";
+        return;
+      }
+      const link = `https://www.amazon.com/dp/${asin}/?tag=${tag}`;
+      out.innerHTML = `✅ Your affiliate link: <a href="${link}" target="_blank">${link}</a>`;
+    };
+  </script>
+</body>
+</html>
