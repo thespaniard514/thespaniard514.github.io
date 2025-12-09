@@ -1,0 +1,129 @@
+name: PR Preview
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+      - closed
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        if: github.event.action != 'closed'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        if: github.event.action != 'closed'
+        run: npm ci
+
+      - name: Build site assets
+        if: github.event.action != 'closed'
+        run: npm run css-agency
+
+      - name: Prepare preview content
+        if: github.event.action != 'closed'
+        run: |
+          mkdir -p preview/pr-${{ github.event.number }}
+          rsync -av --delete \
+            --exclude '.git*' \
+            --exclude 'node_modules' \
+            --exclude 'less' \
+            --exclude '.github' \
+            --exclude 'preview' \
+            ./ preview/pr-${{ github.event.number }}/
+
+      - name: Deploy preview to GitHub Pages
+        if: github.event.action != 'closed'
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: preview/pr-${{ github.event.number }}
+          destination_dir: pr-previews/pr-${{ github.event.number }}
+          keep_files: true
+          commit_message: "chore: deploy preview for PR #${{ github.event.number }}"
+
+      - name: Find existing preview comment
+        if: github.event.action != 'closed'
+        id: find-comment
+        uses: peter-evans/find-comment@v3
+        with:
+          issue-number: ${{ github.event.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: 'Preview available'
+
+      - name: Comment preview link
+        if: github.event.action != 'closed'
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.number }}
+          comment-id: ${{ steps.find-comment.outputs.comment-id }}
+          body: |
+            🚀 Preview available: https://thespaniard514.github.io/pr-previews/pr-${{ github.event.number }}/
+
+      - name: Check for preview branch
+        if: github.event.action == 'closed'
+        id: preview-branch
+        run: |
+          if git ls-remote --exit-code origin gh-pages; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout preview branch
+        if: github.event.action == 'closed' && steps.preview-branch.outputs.exists == 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: gh-pages-branch
+
+      - name: Remove preview content
+        if: github.event.action == 'closed' && steps.preview-branch.outputs.exists == 'true'
+        run: |
+          cd gh-pages-branch
+          if [ -d "pr-previews/pr-${{ github.event.number }}" ]; then
+            rm -rf "pr-previews/pr-${{ github.event.number }}"
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add -A
+            if git diff --cached --quiet; then
+              echo "No preview content to remove."
+              exit 0
+            fi
+            git commit -m "chore: remove preview for PR #${{ github.event.number }}"
+            git push origin HEAD:gh-pages
+          else
+            echo "Preview content not found."
+          fi
+
+      - name: Find preview comment for cleanup
+        if: github.event.action == 'closed'
+        id: find-comment-closed
+        uses: peter-evans/find-comment@v3
+        with:
+          issue-number: ${{ github.event.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: 'Preview available'
+
+      - name: Update preview comment
+        if: github.event.action == 'closed' && steps.find-comment-closed.outputs.comment-id != ''
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ steps.find-comment-closed.outputs.comment-id }}
+          issue-number: ${{ github.event.number }}
+          body: "🧹 Preview removed because this PR was closed."
