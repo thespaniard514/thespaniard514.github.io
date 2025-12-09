@@ -38,7 +38,7 @@ jobs:
         if: github.event.action != 'closed'
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: master
           path: pages-branch
           fetch-depth: 0
 
@@ -67,7 +67,7 @@ jobs:
             exit 0
           fi
           git commit -m "chore: deploy preview for PR #${{ github.event.number }}"
-          git push origin HEAD:main
+          git push origin HEAD:master
 
       - name: Find existing preview comment
         if: github.event.action != 'closed'
@@ -92,7 +92,7 @@ jobs:
         if: github.event.action == 'closed'
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: master
           path: pages-branch
           fetch-depth: 0
 
@@ -110,7 +110,7 @@ jobs:
               exit 0
             fi
             git commit -m "chore: remove preview for PR #${{ github.event.number }}"
-            git push origin HEAD:main
+            git push origin HEAD:master
           else
             echo "Preview content not found."
           fi
