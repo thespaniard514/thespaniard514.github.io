@@ -34,28 +34,40 @@ jobs:
         if: github.event.action != 'closed'
         run: npm run css-agency
 
+      - name: Checkout Pages branch
+        if: github.event.action != 'closed'
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: pages-branch
+          fetch-depth: 0
+
       - name: Prepare preview content
         if: github.event.action != 'closed'
         run: |
-          mkdir -p preview/pr-${{ github.event.number }}
+          mkdir -p pages-branch/pr-previews
+          rm -rf pages-branch/pr-previews/pr-${{ github.event.number }}
           rsync -av --delete \
             --exclude '.git*' \
             --exclude 'node_modules' \
             --exclude 'less' \
             --exclude '.github' \
-            --exclude 'preview' \
-            ./ preview/pr-${{ github.event.number }}/
+            --exclude 'pages-branch' \
+            ./ pages-branch/pr-previews/pr-${{ github.event.number }}/
 
-      - name: Deploy preview to GitHub Pages
+      - name: Deploy preview to Pages branch
         if: github.event.action != 'closed'
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages
-          publish_dir: preview/pr-${{ github.event.number }}
-          destination_dir: pr-previews/pr-${{ github.event.number }}
-          keep_files: true
-          commit_message: "chore: deploy preview for PR #${{ github.event.number }}"
+        working-directory: pages-branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pr-previews/pr-${{ github.event.number }}
+          if git diff --cached --quiet; then
+            echo "No preview content changes to deploy."
+            exit 0
+          fi
+          git commit -m "chore: deploy preview for PR #${{ github.event.number }}"
+          git push origin HEAD:main
 
       - name: Find existing preview comment
         if: github.event.action != 'closed'
@@ -63,8 +75,8 @@ jobs:
         uses: peter-evans/find-comment@v3
         with:
           issue-number: ${{ github.event.number }}
-          comment-author: 'github-actions[bot]'
-          body-includes: 'Preview available'
+          comment-author: "github-actions[bot]"
+          body-includes: "Preview available"
 
       - name: Comment preview link
         if: github.event.action != 'closed'
@@ -73,29 +85,21 @@ jobs:
           issue-number: ${{ github.event.number }}
           comment-id: ${{ steps.find-comment.outputs.comment-id }}
           body: |
-            🚀 Preview available: https://thespaniard514.github.io/pr-previews/pr-${{ github.event.number }}/
+            🚀 Preview available: https://nmcollins.com/pr-previews/pr-${{ github.event.number }}/
+            (GitHub-hosted mirror: https://thespaniard514.github.io/pr-previews/pr-${{ github.event.number }}/)
 
-      - name: Check for preview branch
+      - name: Checkout Pages branch for cleanup
         if: github.event.action == 'closed'
-        id: preview-branch
-        run: |
-          if git ls-remote --exit-code origin gh-pages; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Checkout preview branch
-        if: github.event.action == 'closed' && steps.preview-branch.outputs.exists == 'true'
         uses: actions/checkout@v4
         with:
-          ref: gh-pages
-          path: gh-pages-branch
+          ref: main
+          path: pages-branch
+          fetch-depth: 0
 
       - name: Remove preview content
-        if: github.event.action == 'closed' && steps.preview-branch.outputs.exists == 'true'
+        if: github.event.action == 'closed'
+        working-directory: pages-branch
         run: |
-          cd gh-pages-branch
           if [ -d "pr-previews/pr-${{ github.event.number }}" ]; then
             rm -rf "pr-previews/pr-${{ github.event.number }}"
             git config user.name "github-actions[bot]"
@@ -106,7 +110,7 @@ jobs:
               exit 0
             fi
             git commit -m "chore: remove preview for PR #${{ github.event.number }}"
-            git push origin HEAD:gh-pages
+            git push origin HEAD:main
           else
             echo "Preview content not found."
           fi
@@ -117,8 +121,8 @@ jobs:
         uses: peter-evans/find-comment@v3
         with:
           issue-number: ${{ github.event.number }}
-          comment-author: 'github-actions[bot]'
-          body-includes: 'Preview available'
+          comment-author: "github-actions[bot]"
+          body-includes: "Preview available"
 
       - name: Update preview comment
         if: github.event.action == 'closed' && steps.find-comment-closed.outputs.comment-id != ''
