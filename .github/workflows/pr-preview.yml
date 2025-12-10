@@ -84,9 +84,10 @@ jobs:
         with:
           issue-number: ${{ github.event.number }}
           comment-id: ${{ steps.find-comment.outputs.comment-id }}
+          edit-mode: replace
           body: |
-            🚀 Preview available: https://nmcollins.com/pr-previews/pr-${{ github.event.number }}/
-            (GitHub-hosted mirror: https://thespaniard514.github.io/pr-previews/pr-${{ github.event.number }}/)
+            🚀 Preview available: https://nmcollins.com/pr-previews/pr-${{ github.event.number }}/?v=${{ github.run_id }}
+            (GitHub-hosted mirror: https://thespaniard514.github.io/pr-previews/pr-${{ github.event.number }}/?v=${{ github.run_id }})
 
       - name: Checkout Pages branch for cleanup
         if: github.event.action == 'closed'
