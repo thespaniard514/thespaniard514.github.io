@@ -38,7 +38,7 @@ jobs:
         if: github.event.action != 'closed'
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: master
           path: pages-branch
           fetch-depth: 0
 
@@ -67,7 +67,7 @@ jobs:
             exit 0
           fi
           git commit -m "chore: deploy preview for PR #${{ github.event.number }}"
-          git push origin HEAD:main
+          git push origin HEAD:master
 
       - name: Find existing preview comment
         if: github.event.action != 'closed'
@@ -84,15 +84,16 @@ jobs:
         with:
           issue-number: ${{ github.event.number }}
           comment-id: ${{ steps.find-comment.outputs.comment-id }}
+          edit-mode: replace
           body: |
-            🚀 Preview available: https://nmcollins.com/pr-previews/pr-${{ github.event.number }}/
-            (GitHub-hosted mirror: https://thespaniard514.github.io/pr-previews/pr-${{ github.event.number }}/)
+            🚀 Preview available: https://nmcollins.com/pr-previews/pr-${{ github.event.number }}/?v=${{ github.run_id }}
+            (GitHub-hosted mirror: https://thespaniard514.github.io/pr-previews/pr-${{ github.event.number }}/?v=${{ github.run_id }})
 
       - name: Checkout Pages branch for cleanup
         if: github.event.action == 'closed'
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: master
           path: pages-branch
           fetch-depth: 0
 
@@ -110,7 +111,7 @@ jobs:
               exit 0
             fi
             git commit -m "chore: remove preview for PR #${{ github.event.number }}"
-            git push origin HEAD:main
+            git push origin HEAD:master
           else
             echo "Preview content not found."
           fi
