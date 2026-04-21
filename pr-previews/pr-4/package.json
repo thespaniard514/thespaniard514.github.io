@@ -1,0 +1,22 @@
+{
+  "name": "thespaniard514.github.io",
+  "version": "1.0.0",
+  "description": "Nick Collins personal webpage",
+  "main": "index.html",
+  "scripts": {
+    "css-agency": "lessc less/agency.less css/agency.css"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thespaniard514/thespaniard514.github.io.git"
+  },
+  "author": "Nick Collins",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/thespaniard514/thespaniard514.github.io/issues"
+  },
+  "homepage": "https://github.com/thespaniard514/thespaniard514.github.io#readme",
+  "devDependencies": {
+    "less": "^3.9.0"
+  }
+}
